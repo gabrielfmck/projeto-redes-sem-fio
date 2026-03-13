@@ -1,6 +1,6 @@
 param(
   [string]$OutputPath = "demo-cert.pfx",
-  [string]$Password = "tcd-redes-demo",
+  [string]$Password = "projeto-redes-demo",
   [string[]]$DnsNames = @("localhost"),
   [string[]]$IpAddresses = @("127.0.0.1")
 )
