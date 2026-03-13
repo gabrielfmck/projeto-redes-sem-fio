@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxo Protegido</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="login.js" defer></script>
+</head>
+<body data-page="login" data-mode="seguro">
+  <main class="page-shell">
+    <nav class="topbar">
+      <a href="index.html" class="mini-link">Inicio</a>
+      <a href="painel-analise.html" class="mini-link">Painel</a>
+      <a href="login-inseguro.html" class="mini-link">Fluxo vulneravel</a>
+    </nav>
+
+    <section class="card form-card">
+      <p class="eyebrow safe-text">Fluxo protegido</p>
+      <h1>Login com defesa no servidor</h1>
+      <p class="hero-copy">
+        Aqui o servidor valida a senha com <code>scrypt</code>, ignora qualquer role enviado pelo cliente
+        e bloqueia a conta apos tres falhas consecutivas por 60 segundos.
+      </p>
+
+      <div class="callout safe">
+        <strong>Teste principal:</strong> tente enviar <code>role=admin</code> para o usuario
+        <code>aluno</code>. O backend deve impor <code>user</code>.
+      </div>
+
+      <form id="login-form" class="stack">
+        <label class="field">
+          <span>Usuario</span>
+          <input type="text" name="usuario" value="aluno" required>
+        </label>
+
+        <label class="field">
+          <span>Senha</span>
+          <input type="password" name="senha" value="123456" required>
+        </label>
+
+        <label class="field">
+          <span>Role que o cliente tenta reivindicar</span>
+          <select name="role">
+            <option value="">nenhum</option>
+            <option value="user">user</option>
+            <option value="admin" selected>admin</option>
+            <option value="analyst">analyst</option>
+          </select>
+        </label>
+
+        <button class="btn safe" type="submit">Enviar login protegido</button>
+      </form>
+    </section>
+
+    <section class="grid two-col">
+      <article class="card">
+        <h2>O que observar</h2>
+        <ul class="plain-list">
+          <li>No Burp, mesmo alterando o role, o backend devolve o privilegio real do usuario.</li>
+          <li>No painel, nao existe senha registrada nos eventos do fluxo protegido.</li>
+          <li>Apos tres senhas erradas, o sistema bloqueia o login por 60 segundos.</li>
+          <li>Se esta pagina for aberta via HTTPS, o Wireshark nao vai mostrar o conteudo da senha em texto claro.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Resultado da requisicao</h2>
+        <div id="result-box" class="result-box muted">
+          Envie o formulario para ver a resposta do servidor.
+        </div>
+        <div id="transport-tip" class="transport-tip"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

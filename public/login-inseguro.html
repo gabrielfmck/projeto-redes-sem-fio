@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxo Vulneravel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="login.js" defer></script>
+</head>
+<body data-page="login" data-mode="vulneravel">
+  <main class="page-shell">
+    <nav class="topbar">
+      <a href="index.html" class="mini-link">Inicio</a>
+      <a href="painel-analise.html" class="mini-link">Painel</a>
+      <a href="login-seguro.html" class="mini-link">Fluxo protegido</a>
+    </nav>
+
+    <section class="card form-card">
+      <p class="eyebrow danger-text">Fluxo vulneravel</p>
+      <h1>Login exposto em HTTP</h1>
+      <p class="hero-copy">
+        Este fluxo simula um sistema fraco: a senha cruza a rede sem TLS e o servidor aceita o
+        parametro <code>role</code> enviado pelo cliente.
+      </p>
+
+      <div class="callout danger">
+        <strong>Teste principal:</strong> faca login com <code>aluno / 123456</code> e altere
+        <code>role=user</code> para <code>role=admin</code> no Burp Suite.
+      </div>
+
+      <form id="login-form" class="stack">
+        <label class="field">
+          <span>Usuario</span>
+          <input type="text" name="usuario" value="aluno" required>
+        </label>
+
+        <label class="field">
+          <span>Senha enviada em texto claro</span>
+          <input type="text" name="senha" value="123456" required>
+        </label>
+
+        <label class="field">
+          <span>Role enviado pelo cliente</span>
+          <select name="role">
+            <option value="user" selected>user</option>
+            <option value="admin">admin</option>
+            <option value="analyst">analyst</option>
+          </select>
+        </label>
+
+        <button class="btn danger" type="submit">Enviar login vulneravel</button>
+      </form>
+    </section>
+
+    <section class="grid two-col">
+      <article class="card">
+        <h2>O que observar</h2>
+        <ul class="plain-list">
+          <li>No Wireshark, o corpo do POST aparece em texto legivel quando o acesso ocorre em HTTP.</li>
+          <li>No Burp, a alteracao do role muda o privilegio aceito pelo servidor vulneravel.</li>
+          <li>No painel, a senha digitada fica registrada como evidencia do problema.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Resultado da requisicao</h2>
+        <div id="result-box" class="result-box muted">
+          Envie o formulario para ver a resposta do servidor.
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

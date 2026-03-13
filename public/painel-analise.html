@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Analise</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="painel.js" defer></script>
+</head>
+<body data-page="painel">
+  <main class="page-shell">
+    <nav class="topbar">
+      <a href="index.html" class="mini-link">Inicio</a>
+      <a href="login-inseguro.html" class="mini-link">Fluxo vulneravel</a>
+      <a href="login-seguro.html" class="mini-link">Fluxo protegido</a>
+    </nav>
+
+    <section class="grid two-col">
+      <article class="card">
+        <p class="eyebrow">Telemetria</p>
+        <h1>Painel de evidencias</h1>
+        <p class="hero-copy">
+          Use este painel durante a apresentacao para mostrar as tentativas, as alteracoes bloqueadas
+          e as diferencas entre o fluxo vulneravel e o protegido.
+        </p>
+        <button id="reset-demo" class="btn ghost inline-btn" type="button">Reiniciar demonstracao</button>
+      </article>
+
+      <article class="card">
+        <h2>Resumo</h2>
+        <div id="metric-cards" class="metric-grid"></div>
+        <div id="network-summary" class="stack gap-sm"></div>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Ultimos eventos</h2>
+      <div id="event-list" class="event-list">
+        <p class="muted">Carregando eventos...</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

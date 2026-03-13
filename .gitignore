@@ -1,0 +1,18 @@
+node_modules/
+
+# Local HTTPS certificate generated for the demo
+demo-cert.pfx
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment and local overrides
+.env
+.env.*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

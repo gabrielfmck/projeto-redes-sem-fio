@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguranca em Redes Wi-Fi</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="home.js" defer></script>
+</head>
+<body data-page="home">
+  <main class="page-shell">
+    <section class="hero">
+      <p class="eyebrow">Projeto final</p>
+      <h1>Seguranca em redes sem fio por camadas</h1>
+      <p class="hero-copy">
+        Esta demonstracao compara um login vulneravel com um fluxo corrigido.
+        Ela foi pensada para ser testada no navegador, no celular, no Wireshark
+        e no Burp Suite.
+      </p>
+      <div class="hero-actions">
+        <a href="login-inseguro.html" class="btn danger">Abrir fluxo vulneravel</a>
+        <a href="login-seguro.html" class="btn safe">Abrir fluxo protegido</a>
+        <a href="painel-analise.html" class="btn ghost">Abrir painel de analise</a>
+      </div>
+    </section>
+
+    <section class="grid two-col">
+      <article class="card">
+        <h2>Cenarios da demo</h2>
+        <div class="feature-list">
+          <div class="feature danger">
+            <h3>Fluxo vulneravel</h3>
+            <p>HTTP, senha em texto claro, servidor confia no role enviado pelo cliente e aceita elevacao para admin.</p>
+          </div>
+          <div class="feature safe">
+            <h3>Fluxo protegido</h3>
+            <p>Senha validada com scrypt no servidor, role imposto pelo backend, bloqueio por tentativa e painel de eventos.</p>
+          </div>
+          <div class="feature neutral">
+            <h3>Analise em camadas</h3>
+            <p>Wireshark mostra o trafego, Burp altera requisicoes e a comparacao ajuda a explicar WPA2, WPA3, TLS e controles de aplicacao.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Credenciais de teste</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Senha</th>
+              <th>Role real</th>
+            </tr>
+          </thead>
+          <tbody id="demo-users"></tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="grid two-col">
+      <article class="card">
+        <h2>Rede para o celular</h2>
+        <div id="network-status" class="stack gap-sm">
+          <p class="muted">Carregando enderecos locais...</p>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Resumo da execucao</h2>
+        <div id="metric-cards" class="metric-grid"></div>
+        <button id="reset-demo" class="btn ghost inline-btn" type="button">Reiniciar demonstracao</button>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Roteiro rapido</h2>
+      <ol class="steps">
+        <li>Abra o fluxo vulneravel no celular e faca login com <strong>aluno / 123456</strong>.</li>
+        <li>Intercepte a requisicao no Burp e troque <strong>role=user</strong> por <strong>role=admin</strong>.</li>
+        <li>Observe no painel que o servidor vulneravel aceitou a elevacao de privilegio.</li>
+        <li>Repita no fluxo protegido e confirme que o backend bloqueia a tentativa.</li>
+        <li>Compare o trafego HTTP e HTTPS no Wireshark para explicar a diferenca entre seguranca de aplicacao e de transporte.</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>
