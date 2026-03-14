@@ -1,107 +1,293 @@
-# Projeto Final - Segurança em Redes Sem Fio
+# Projeto - Seguranca em Redes Sem Fio
 
-Este projeto demonstra segurança em redes sem fio por camadas, comparando um fluxo vulnerável com um fluxo protegido.
+Este projeto foi desenvolvido como uma demonstracao pratica de seguranca em redes sem fio, com foco em autenticacao, interceptacao de trafego, adulteracao de requisicoes e mecanismos de defesa em diferentes camadas.
 
-O sistema foi construído para permitir testes com:
+A proposta central e comparar dois cenarios:
 
-- navegador;
-- celular na mesma rede Wi-Fi;
-- Burp Suite;
-- Wireshark.
+- um fluxo vulneravel, em que o cliente envia dados sensiveis por HTTP e o servidor confia em informacoes manipulaveis vindas da requisicao
+- um fluxo protegido, em que o backend valida credenciais corretamente, ignora privilegios enviados pelo cliente, aplica bloqueio por tentativas e pode operar sob HTTPS
 
-## 1. O que o projeto faz
+O projeto foi pensado para ser demonstrado com:
 
-O projeto possui três partes principais:
+- navegador
+- celular conectado na mesma rede Wi-Fi
+- Burp Suite
+- Wireshark
+- painel de evidencias da propria aplicacao
 
-- `Fluxo vulnerável`
-  - usa HTTP;
-  - permite adulteração do parâmetro `role`;
-  - aceita privilégio enviado pelo cliente.
+## 1. Resumo do projeto
 
-- `Fluxo protegido`
-  - valida a senha no servidor;
-  - ignora o `role` enviado pelo cliente;
-  - bloqueia tentativas repetidas;
-  - pode rodar com HTTPS para comparação de tráfego.
+Em redes sem fio, a seguranca nao depende de apenas um ponto de protecao. Mesmo quando a rede possui mecanismos como WPA2 ou WPA3, aplicacoes mal implementadas ainda podem expor credenciais, permitir adulteracao de parametros e facilitar ataques de elevacao de privilegio. Por outro lado, mesmo uma aplicacao bem implementada pode ser prejudicada se trafegar sem criptografia de transporte em ambientes hostis.
 
-- `Painel de evidências`
-  - mostra tentativas, falhas, bloqueios e adulterações.
+Com base nisso, este projeto demonstra seguranca em camadas por meio de uma aplicacao web de login com dois comportamentos opostos:
 
-## 2. Credenciais de demonstração
+- no primeiro, a autenticacao e propositalmente insegura
+- no segundo, a autenticacao adota controles basicos de seguranca no servidor
 
-- `aluno / 123456 / user`;
-- `analista / wifi2026 / analyst`;
-- `admin / adminwifi / admin`.
+O experimento mostra como ferramentas de analise e interceptacao, como Wireshark e Burp Suite, permitem visualizar ou modificar o trafego, e como as contramedidas corretas impedem a exploracao.
 
-Essas credenciais são apenas para testes locais do projeto.
+## 2. Tema e recorte academico
 
-## 3. Requisitos
+### 2.1. Tema geral
 
-- `Node.js` instalado;
-- `npm` instalado;
-- `PowerShell` para gerar o certificado local, se quiser usar HTTPS;
-- opcionalmente:
-  - `Burp Suite`;
-  - `Wireshark`.
+Seguranca em redes sem fio.
 
-## 4. Como instalar e iniciar
+### 2.2. Recorte adotado
 
-1. Abra um terminal na raiz do projeto clonado.
-2. Instale as dependências:
+Seguranca em redes sem fio analisada a partir da autenticacao de usuarios e da protecao do trafego entre cliente e servidor.
+
+### 2.3. Pergunta central de pesquisa
+
+Como a combinacao entre falhas na aplicacao e ausencia de protecao adequada no transporte pode comprometer a seguranca em redes sem fio, e como mecanismos corretivos reduzem esse risco?
+
+### 2.4. Hipotese do trabalho
+
+Quando uma aplicacao web trafega dados em HTTP e confia em parametros enviados pelo cliente, o ambiente sem fio se torna mais suscetivel a interceptacao e adulteracao. Em contrapartida, a adocao de validacao no backend, protecao por TLS e controles adicionais como bloqueio por tentativas reduz significativamente a superficie de ataque.
+
+## 3. Objetivos
+
+### 3.1. Objetivo geral
+
+Demonstrar, de forma pratica, como vulnerabilidades de autenticacao e transporte podem afetar a seguranca em redes sem fio, bem como apresentar mecanismos de mitigacao aplicados em diferentes camadas.
+
+### 3.2. Objetivos especificos
+
+- implementar um fluxo vulneravel de autenticacao para demonstrar riscos reais
+- implementar um fluxo protegido com validacoes no servidor
+- capturar e analisar trafego da aplicacao com Wireshark
+- interceptar e modificar requisicoes com Burp Suite
+- comparar o comportamento da aplicacao em HTTP e HTTPS
+- registrar evidencias e metricas em um painel de analise
+- produzir resultados que possam ser discutidos no artigo e na apresentacao
+
+## 4. Justificativa
+
+Redes sem fio sao amplamente utilizadas em ambientes domesticos, academicos e corporativos. Entretanto, a percepcao de seguranca muitas vezes se concentra apenas na senha do Wi-Fi ou no protocolo da rede, como WPA2 ou WPA3. Esse entendimento e incompleto, porque a seguranca final depende tambem da forma como a aplicacao trata autenticacao, autorizacao, transporte e monitoramento.
+
+Este projeto e relevante porque demonstra, na pratica, que:
+
+- a seguranca da rede nao substitui a seguranca da aplicacao
+- a seguranca da aplicacao nao substitui a criptografia do transporte
+- a defesa eficaz depende de multiplas camadas funcionando em conjunto
+
+## 5. Fundamentacao teorica resumida
+
+Esta secao pode ser usada como base para a parte teorica do artigo.
+
+### 5.1. Seguranca em redes sem fio
+
+Redes sem fio estao sujeitas a riscos como interceptacao, acesso nao autorizado, sniffing, ataques de forca bruta e criacao de pontos de acesso maliciosos. Protocolos como WEP, WPA, WPA2 e WPA3 surgiram para elevar o nivel de seguranca da comunicacao entre dispositivo e roteador, principalmente na camada de enlace.
+
+### 5.2. WEP, WPA2 e WPA3
+
+- `WEP`
+  - considerado obsoleto
+  - possui fragilidades conhecidas
+  - nao deve ser utilizado em ambientes reais
+
+- `WPA2`
+  - representou um grande avanço em relacao ao WEP
+  - tornou-se padrao por muitos anos
+  - ainda depende de senhas fortes e configuracao adequada
+
+- `WPA3`
+  - amplia a protecao contra ataques de adivinhacao offline
+  - oferece mecanismos mais modernos de autenticacao
+  - e considerado superior ao WPA2 em cenarios atuais
+
+### 5.3. Camadas de seguranca
+
+O projeto conversa com tres camadas principais:
+
+- `camada de enlace`
+  - relacionada ao Wi-Fi, WPA2 e WPA3
+- `camada de transporte`
+  - relacionada a HTTP versus HTTPS e ao uso de TLS
+- `camada de aplicacao`
+  - relacionada ao login, validacao, autorizacao e confianca nos parametros
+
+### 5.4. Wireshark
+
+O Wireshark e uma ferramenta de captura e analise de pacotes. No projeto, ele e usado para mostrar:
+
+- a existencia do trafego na rede
+- a diferenca entre trafego legivel em HTTP
+- e a dificuldade de leitura quando o transporte esta protegido por HTTPS
+
+### 5.5. Burp Suite
+
+O Burp Suite e uma ferramenta de interceptacao e manipulacao de requisicoes HTTP e HTTPS. No projeto, ele e usado para mostrar:
+
+- interceptacao de requisicoes antes do envio ao servidor
+- adulteracao de parametros
+- comparacao entre um backend inseguro e outro protegido
+
+### 5.6. Autenticacao e autorizacao
+
+O projeto tambem ajuda a diferenciar dois conceitos que podem ser explorados no artigo:
+
+- `autenticacao`
+  - verificar se o usuario realmente e quem diz ser
+- `autorizacao`
+  - definir o que o usuario autenticado pode fazer
+
+No fluxo vulneravel, o servidor falha justamente ao confiar na autorizacao enviada pelo cliente.
+
+## 6. Problema demonstrado pelo projeto
+
+O fluxo vulneravel mostra duas falhas centrais:
+
+- os dados trafegam por HTTP, o que facilita a visualizacao do conteudo em ferramentas de captura
+- o servidor aceita o parametro `role` enviado pelo cliente, permitindo adulteracao de privilegio
+
+Isso faz com que um usuario comum consiga:
+
+- ter sua senha visivel no trafego capturado
+- modificar a requisicao no Burp Suite
+- simular uma elevacao para `admin`
+
+Ja o fluxo protegido foi construido para responder a essas fragilidades:
+
+- a senha e verificada no servidor com `scrypt`
+- o `role` e imposto pelo backend
+- ha bloqueio apos tres falhas
+- o transporte pode ser protegido com HTTPS
+
+## 7. Arquitetura da demonstracao
+
+O sistema possui dois componentes principais:
+
+- `backend em Node.js com Express`
+- `frontend estatico servido pela aplicacao`
+
+### 7.1. Backend
+
+O servidor principal esta em `server.js`.
+
+Ele implementa:
+
+- servidor HTTP na porta `3000` por padrao
+- servidor HTTPS na porta `3443` por padrao, se houver certificado
+- rota vulneravel de login
+- rota protegida de login
+- controle de bloqueio por tentativas
+- API de metricas e eventos
+- reinicializacao do estado da demo
+
+Pontos importantes do codigo:
+
+- configuracao de portas e certificado em `server.js`
+- criacao de hashes com `scrypt` em `server.js`
+- metricas e telemetria em `server.js`
+- rastreamento de tentativas em `server.js`
+- fluxo vulneravel em `server.js`
+- fluxo protegido em `server.js`
+- inicializacao HTTP e HTTPS em `server.js`
+
+### 7.2. Frontend
+
+O frontend possui tres visoes principais:
+
+- pagina inicial
+- formulario vulneravel
+- formulario protegido
+- painel de evidencias
+
+Arquivos principais:
+
+- home: `public/index.html`
+- login vulneravel: `public/login-inseguro.html`
+- login protegido: `public/login-seguro.html`
+- painel: `public/painel-analise.html`
+- cliente do painel: `public/painel.js`
+
+### 7.3. Painel de evidencias
+
+O painel mostra:
+
+- numero de tentativas no fluxo vulneravel
+- numero de tentativas no fluxo protegido
+- falhas
+- bloqueios
+- adulteracoes aceitas
+- adulteracoes bloqueadas
+- eventos com data, hora e detalhes
+
+Isso ajuda muito na escrita do artigo porque transforma a apresentacao pratica em dados observaveis.
+
+## 8. O que a demonstracao mostra na pratica
+
+### 8.1. No fluxo vulneravel
+
+O fluxo vulneravel demonstra:
+
+- envio de credenciais por HTTP
+- possibilidade de visualizacao do corpo da requisicao
+- confianca indevida em dados enviados pelo cliente
+- adulteracao de `role`
+- sucesso de elevacao de privilegio
+
+### 8.2. No fluxo protegido
+
+O fluxo protegido demonstra:
+
+- validacao de senha no lado do servidor
+- nao confianca no `role` vindo do cliente
+- bloqueio temporario por repeticao de erros
+- registro de eventos de seguranca
+- diferenca entre HTTP e HTTPS no transporte
+
+### 8.3. Na perspectiva do tema
+
+Isso se encaixa no tema "seguranca em redes sem fio" porque mostra que:
+
+- uma rede sem fio insegura ou mal monitorada facilita captura de trafego
+- um trafego HTTP exposto aumenta o risco
+- uma aplicacao mal implementada potencializa o dano
+- uma defesa em camadas reduz a exploracao
+
+## 9. Credenciais da demonstracao
+
+- `aluno / 123456 / user`
+- `analista / wifi2026 / analyst`
+- `admin / adminwifi / admin`
+
+## 10. Como iniciar o projeto
+
+1. Abra um terminal na raiz do projeto clonado
+2. Rode:
 
 ```powershell
 npm install
-```
-
-3. Inicie o servidor:
-
-```powershell
 npm start
 ```
 
-4. Abra no navegador:
+3. Abra no navegador:
 
 ```txt
 http://localhost:3000
 ```
 
-## 5. Como habilitar HTTPS
-
-O projeto funciona normalmente em HTTP. O HTTPS é opcional e serve principalmente para comparar o tráfego no Wireshark.
-
-### 5.1. Gerar o certificado local
-
-Execute:
+4. O projeto funciona normalmente em HTTP.
+5. Para habilitar HTTPS localmente, gere o certificado da demo com:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\gerar-certificado-demo.ps1
 ```
 
-Depois disso, o arquivo `demo-cert.pfx` será criado localmente.
-
-### 5.2. Iniciar com HTTPS
-
-Depois de gerar o certificado, rode:
-
-```powershell
-npm start
-```
-
-Se tudo estiver correto, o projeto ficará disponível em:
+6. Depois de gerar o certificado, o servidor HTTPS tambem sobe em:
 
 ```txt
 https://localhost:3443
 ```
 
-### 5.3. Observação importante
+### 10.1. Observacao sobre o certificado
 
-- o arquivo `demo-cert.pfx` deve ser gerado localmente por cada usuário;
-- esse arquivo não deve ser publicado no repositório;
-- o script `scripts/gerar-certificado-demo.ps1` existe justamente para criar esse certificado localmente.
+- o arquivo `demo-cert.pfx` deve ser gerado localmente por cada usuario
+- esse arquivo nao deve ser publicado no repositório
+- o script `scripts/gerar-certificado-demo.ps1` existe justamente para criar esse certificado de forma local
 
-## 6. Se o HTTPS não iniciar
-
-Se aparecer algo como:
+Se o HTTPS não iniciar e aparecer algo como:
 
 ```txt
 HTTPS nao foi iniciado. Verifique o arquivo demo-cert.pfx e a senha configurada.
@@ -110,31 +296,31 @@ mac verify failure
 
 isso significa que o servidor não conseguiu abrir o arquivo `demo-cert.pfx` com a senha esperada.
 
-### 6.1. Como resolver
+Nesse caso:
 
-1. Apague o arquivo `demo-cert.pfx`.
-2. Gere novamente o certificado:
+1. apague o arquivo `demo-cert.pfx`;
+2. gere novamente o certificado:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\gerar-certificado-demo.ps1
 ```
 
-3. Inicie o servidor informando a senha correta:
+3. inicie o servidor informando a senha correta do certificado:
 
 ```powershell
 $env:DEMO_CERT_PASSWORD='projeto-redes-demo'
 npm start
 ```
 
-### 6.2. Importante
+Importante:
 
 - se isso acontecer, o fluxo em `HTTP` ainda pode funcionar normalmente;
 - o erro afeta apenas a inicialização do `HTTPS`;
 - se aparecer `Servidor HTTP rodando em http://localhost:3000`, o projeto já pode ser testado em HTTP.
 
-## 7. Se a porta 3000 estiver ocupada
+### 10.2. Se a porta 3000 estiver ocupada
 
-Se aparecer erro de porta em uso, execute com portas alternativas:
+Use portas alternativas:
 
 ```powershell
 $env:PORT='3100'
@@ -142,73 +328,71 @@ $env:HTTPS_PORT='3444'
 npm start
 ```
 
-## 8. Telas disponíveis
+## 11. Telas
 
 - Home:
   - `http://localhost:3000`
 
-- Fluxo vulnerável:
+- Fluxo vulneravel:
   - `http://localhost:3000/login-inseguro.html`
 
 - Fluxo protegido:
   - `http://localhost:3000/login-seguro.html`
 
-- Painel de evidências:
+- Painel de evidencias:
   - `http://localhost:3000/painel-analise.html`
 
-## 9. Como testar no navegador
+## 12. Metodologia
 
-### 9.1. Fluxo vulnerável
+Esta secao pode ser adaptada quase diretamente para o artigo.
 
-1. Abra:
+### 12.1. Tipo de estudo
 
-```txt
-http://localhost:3000/login-inseguro.html
-```
+Estudo experimental demonstrativo, com comparacao entre dois cenarios de autenticacao em ambiente controlado.
 
-2. Use:
-   - `usuario = aluno`;
-   - `senha = 123456`;
-   - `role = user`.
-3. Envie o formulário.
-4. Veja a resposta do servidor.
+### 12.2. Ambiente de teste
 
-Você também pode testar adulterando diretamente o campo `role` para `admin`.
+- computador com o servidor da aplicacao
+- navegador web
+- Burp Suite para interceptacao
+- Wireshark para captura
+- celular conectado na mesma rede Wi-Fi
 
-### 9.2. Fluxo protegido
+### 12.3. Variaveis observadas
 
-1. Abra:
+- visibilidade do conteudo da requisicao
+- possibilidade de adulteracao de parametros
+- aceitacao ou bloqueio da adulteracao
+- ocorrencia de bloqueio por tentativas
+- diferenca de leitura do trafego entre HTTP e HTTPS
 
-```txt
-http://localhost:3000/login-seguro.html
-```
+### 12.4. Procedimento
 
-2. Use:
-   - `usuario = aluno`;
-   - `senha = 123456`;
-   - `role = admin`.
-3. Envie o formulário.
-4. Veja que o servidor retorna o privilégio real do usuário.
+1. iniciar o sistema
+2. executar o fluxo vulneravel
+3. interceptar a requisicao com Burp
+4. adulterar o `role`
+5. observar o sucesso da exploracao
+6. capturar o trafego com Wireshark
+7. executar o fluxo protegido
+8. repetir a tentativa de adulteracao
+9. observar o bloqueio logico no backend
+10. repetir a comparacao sob HTTPS
 
-### 9.3. Bloqueio por tentativas
+## 13. Fluxo completo com Burp Suite
 
-1. No fluxo protegido, digite senha incorreta.
-2. Repita três vezes.
-3. Tente novamente.
-4. O sistema deve informar bloqueio temporário.
+### 13.1. Preparacao
 
-## 10. Como testar com Burp Suite
-
-### 10.1. Preparação
-
-1. Abra o Burp Suite.
-2. Vá em `Proxy > Intercept`.
-3. Deixe `Intercept is off` para carregar as páginas normalmente.
+1. Abra o Burp Suite
+2. Va em `Proxy > Intercept`
+3. Deixe `Intercept is off` para carregar as paginas normalmente
 4. Configure o navegador para usar proxy:
-   - host: `127.0.0.1`;
-   - porta: `8080`.
+   - host: `127.0.0.1`
+   - porta: `8080`
 
-### 10.2. Testar o fluxo vulnerável
+Se for usar o navegador do proprio Burp, pode abrir por ele tambem.
+
+### 13.2. Carregar a pagina vulneravel
 
 1. Abra:
 
@@ -216,226 +400,383 @@ http://localhost:3000/login-seguro.html
 http://127.0.0.1:3000/login-inseguro.html
 ```
 
-2. Deixe a página carregar.
-3. Ligue `Intercept is on`.
-4. Envie o formulário com:
-   - `usuario = aluno`;
-   - `senha = 123456`;
-   - `role = user`.
-5. Quando o Burp interceptar `POST /login-vulneravel`, edite o corpo:
+2. Deixe a pagina carregar completamente
+3. Volte ao Burp
+4. Ligue `Intercept is on`
+
+### 13.3. Interceptar o login vulneravel
+
+1. Volte para o navegador
+2. Preencha:
+   - `usuario = aluno`
+   - `senha = 123456`
+   - `role = user`
+3. Clique em `Enviar login vulneravel`
+4. Volte para o Burp
+5. A requisicao que interessa deve ser:
+
+```txt
+POST /login-vulneravel
+```
+
+6. Na area de requisicao, abra a visualizacao `Raw`
+7. Procure o corpo JSON no final da requisicao
+8. Troque:
+
+```json
+{"usuario":"aluno","senha":"123456","role":"user"}
+```
+
+por:
 
 ```json
 {"usuario":"aluno","senha":"123456","role":"admin"}
 ```
 
-6. Clique em `Forward`.
+9. Clique em `Forward`
 
-Resultado esperado:
+### 13.4. O que deve acontecer
 
-- o servidor aceita o privilégio adulterado.
+- o servidor vai aceitar `admin`
+- a tela vai mostrar que o privilegio adulterado foi aceito
+- no painel de resultado da requisicao, deve aparecer:
+```
+{
+  "ok": true,
+  "mode": "vulneravel",
+  "username": "aluno",
+  "acceptedRole": "admin",
+  "realRole": "user",
+  "transport": "http",
+  "message": "Falha explorada: o servidor confiou no role enviado pelo cliente."
+}
+```
 
-### 10.3. Testar o fluxo protegido
+### 13.5. O que interpretar
 
-1. Abra:
+Esse resultado indica:
+
+- falha de autorizacao
+- excesso de confianca no cliente
+- inadequacao do uso de HTTP para trafego sensivel
+- aumento da superficie de ataque em ambiente sem fio
+
+### 13.6. O que está acontencendo
+
+Aqui estamos interceptando a requisicao na camada de aplicacao. Mesmo sem conhecer a senha de admin, conseguimos mudar o parametro `role` antes de enviar. O servidor vulneravel confiou no cliente e aceitou a elevacao de privilegio.
+
+## 14. Fluxo completo com Burp no login protegido
+
+### 14.1. Abrir a pagina protegida
+
+1. Deixe `Intercept is off`
+2. Abra:
 
 ```txt
 http://127.0.0.1:3000/login-seguro.html
 ```
 
-2. Ligue `Intercept is on`.
-3. Envie o formulário com:
-   - `usuario = aluno`;
-   - `senha = 123456`;
-   - `role = admin`.
-4. Quando o Burp interceptar `POST /login-seguro`, encaminhe a requisição.
+3. Espere a pagina carregar
+4. Ligue `Intercept is on`
 
-Resultado esperado:
+### 14.2. Interceptar o login protegido
 
-- o backend não concede `admin`;
-- o servidor impõe o privilégio real do usuário.
+1. No navegador, preencha:
+   - `usuario = aluno`
+   - `senha = 123456`
+   - `role = admin`
+2. Clique em `Enviar login protegido`
+3. Volte para o Burp
+4. A requisicao deve ser:
 
-## 11. Como testar com Wireshark
+```txt
+POST /login-seguro
+```
 
-### 11.1. Preparação
+5. Se quiser, mantenha o corpo como esta ou force novamente:
 
-1. Abra o Wireshark.
-2. Escolha a interface de rede usada no teste.
-3. Inicie a captura.
+```json
+{"usuario":"aluno","senha":"123456","role":"admin"}
+```
+
+6. Clique em `Forward`
+
+### 14.3. O que deve acontecer
+
+- o servidor nao vai conceder admin
+- a resposta vai trazer o privilegio real do usuario, normalmente `user`
+- no painel, deve aparecer:
+```
+{
+  "ok": true,
+  "mode": "seguro",
+  "username": "aluno",
+  "assignedRole": "user",
+  "claimedRole": "admin",
+  "transport": "https",
+  "httpsEnabled": true,
+  "message": "Login seguro validado. Senha verificada com scrypt, role forjado bloqueado e trafego protegido por TLS."
+}
+```
+
+### 14.4. O que interpretar
+
+Esse resultado demonstra:
+
+- validacao correta no lado do servidor
+- separacao adequada entre autenticacao e autorizacao
+- resistencia a manipulacao de parametros
+- melhoria de postura de seguranca na camada de aplicacao
+
+### 14.5. O que está acontecendo
+
+Agora a requisicao ainda pode ser interceptada, mas o backend nao confia no cliente. Mesmo alterando o `role`, o servidor aplica o privilegio real do usuario. Isso mostra a diferenca entre apenas interceptar e realmente explorar uma falha.
+
+## 15. Fluxo de bloqueio por tentativas
+
+### 15.1. Como testar
+
+1. Abra o fluxo protegido
+2. Use:
+   - `usuario = aluno`
+   - `senha = errada`
+3. Envie a senha errada tres vezes
+4. Tente uma quarta vez
+
+### 15.2. Resultado esperado
+
+- o sistema informa bloqueio temporario
+- no painel aparecem:
+```
+{
+  "ok": false,
+  "mode": "seguro",
+  "message": "Conta temporariamente bloqueada por 60s devido a multiplas falhas.",
+  "retryInSeconds": 60,
+  "transport": "https"
+}
+Falhas consecutivas no fluxo protegido ativam bloqueio temporario e aparecem no painel.
+```
+
+Isso demonstra a adocao de um controle compensatorio contra tentativa repetida de autenticacao, reduzindo o risco de forca bruta simples.
+
+Aqui estamos mostrando um controle adicional de defesa. Mesmo que alguem tente varias senhas, o sistema reduz a chance de brute force com bloqueio temporario.
+
+## 16. Fluxo completo com Wireshark
+
+### 16.1. Preparacao
+
+1. Abra o Wireshark
+2. Escolha a interface de rede que esta sendo usada
+   - geralmente a interface Ethernet
+3. Comece a captura
 4. Use o filtro:
 
 ```txt
 tcp.port == 3000 or tcp.port == 3443
 ```
 
-### 11.2. Teste HTTP
+### 16.2. Teste HTTP
 
-1. Abra:
-
-```txt
-http://IP_DO_PC:3000/login-inseguro.html
-```
-
-2. Envie um login no fluxo vulnerável.
-3. No Wireshark, siga o fluxo TCP (`TCP Stream`).
-
-Resultado esperado:
-
-- o conteúdo da requisição pode aparecer legível;
-- campos como `usuario`, `senha` e `role` podem ser visualizados.
-
-### 11.3. Teste HTTPS
-
-1. Abra:
+1. No navegador ou no celular, abra:
 
 ```txt
-https://IP_DO_PC:3443/login-seguro.html
+http://IPV4_DO_PC:3000/login-inseguro.html
 ```
 
-2. Aceite o aviso do certificado, se aparecer.
-3. Faça o login.
+Para encontrar seu iPv4, vá em configurações > rede e internet > ethernet > copie o endereço iPv4 192.168.X.X
 
-Resultado esperado:
+2. Faca um login vulneravel com:
+   - `usuario = aluno`
+   - `senha = 123456`
+   - `role = user`
 
-- os pacotes continuam existindo;
-- o conteúdo não aparece em texto claro como no HTTP.
+3. No Wireshark:
+   - localize os pacotes da porta `3000`
+   - clique com o botao direito
+   - use `Follow` ou `Seguir`
+   - escolha `Fluxo TCP`
 
-Observações importantes:
+### 16.3. O que deve aparecer
 
-- a porta `3443` atende `HTTPS`, não `HTTP`;
-- portanto, `http://IP_DO_PC:3443/...` não deve funcionar corretamente;
-- use sempre `https://IP_DO_PC:3443/...`.
+No fluxo HTTP, o conteudo do login pode aparecer legivel, incluindo campos como:
 
-Se o acesso por IP não funcionar no navegador, o motivo mais comum é o certificado ter sido gerado apenas para `localhost` e `127.0.0.1`.
+- `usuario`
+- `senha`
+- `role`
 
-Nesse caso, gere novamente o certificado incluindo também o IPv4 do computador:
+Esse resultado mostra que:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\gerar-certificado-demo.ps1 -IpAddresses @("127.0.0.1","SEU_IPv4")
-```
+- o trafego existe em claro do ponto de vista do transporte
+- um observador com acesso ao meio pode analisar o conteudo
+- o problema se agrava em redes sem fio abertas, mal configuradas ou monitoradas
 
-Exemplo:
+No HTTP, o trafego passa sem protecao de transporte. O Wireshark consegue capturar e reconstruir o conteudo da requisicao, o que mostra o risco em redes sem fio sem protecao adequada.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\gerar-certificado-demo.ps1 -IpAddresses @("127.0.0.1","192.168.1.10")
-```
+## 17. Comparacao HTTP vs HTTPS no Wireshark
 
-Depois disso:
+### 17.1. Teste HTTPS
 
-1. apague o `demo-cert.pfx` antigo, se necessário;
-2. gere o novo certificado com o IP correto;
-3. reinicie o servidor;
-4. abra novamente:
+1. Abra no navegador:
 
 ```txt
 https://IP_DO_PC:3443/login-seguro.html
 ```
 
-## 12. Como testar no celular
+2. Se aparecer aviso do certificado, aceite para fins de demonstracao
+3. Faca login com:
+   - `usuario = aluno`
+   - `senha = 123456`
 
-1. Descubra o IPv4 do computador na página inicial.
-2. Conecte o celular e o computador na mesma rede Wi-Fi.
+### 17.2. O que observar
+
+- os pacotes continuam existindo
+- o Wireshark ainda mostra que houve comunicacao
+- mas o conteudo da senha e do corpo nao aparece em texto claro como no HTTP
+
+Esse resultado sustenta a ideia de que:
+
+- a criptografia de transporte nao elimina o trafego
+- ela protege o conteudo do trafego
+- a defesa no transporte complementa, mas nao substitui, a defesa na aplicacao
+
+Aqui ainda existe trafego na rede, mas o conteudo esta protegido por TLS. Isso mostra a diferenca entre enxergar que houve comunicacao e conseguir ler o conteudo da comunicacao.
+
+## 18. Teste no celular
+
+### 18.1. Preparacao
+
+1. Descubra o IPv4 do computador nas configurações
+2. Conecte o celular e o computador na mesma rede Wi-Fi
 3. No celular, abra:
 
 ```txt
-http://IP_DO_PC:3000
+http://IPV4_DO_PC:3000
 ```
 
-Se quiser interceptar pelo Burp:
+### 18.2. Com Burp no celular
 
-1. Nas configurações do Wi-Fi do celular, habilite proxy manual.
-2. Use:
-   - host: IP do computador;
-   - porta: `8080`.
-3. Abra a aplicação no celular.
+Se quiser interceptar o celular pelo Burp:
 
-Observação:
+1. Nas configuracoes do Wi-Fi do celular, habilite proxy manual
+2. Host do proxy:
+   - IP do computador
+3. Porta:
+   - `8080`
+4. Abra a pagina no celular
+5. Intercepte normalmente no Burp
 
-- para HTTP, isso costuma funcionar diretamente;
-- para HTTPS, normalmente é necessário instalar o certificado CA do Burp no dispositivo.
+Observacao:
 
-## 13. Painel de evidências
+- para HTTP, isso costuma funcionar direto
+- para HTTPS, normalmente precisa instalar o certificado CA do Burp no dispositivo
 
-Abra:
+O uso do celular aproxima a demonstracao de um ambiente real de rede sem fio
 
-```txt
-http://localhost:3000/painel-analise.html
-```
+### 19.1. Como usar o painel
 
-O painel exibe:
+O painel (https://localhost:3443/painel-analise.html) é uma fonte de evidencia observacional do experimento, ajudando a documentar:
 
-- tentativas do fluxo vulnerável;
-- tentativas do fluxo protegido;
-- falhas;
-- bloqueios;
-- adulterações aceitas;
-- adulterações bloqueadas;
-- eventos recentes com detalhes.
+- quantidade de tentativas
+- sucesso ou falha das exploracoes
+- ocorrencia de bloqueio
+- diferenca entre os dois fluxos
 
-## 14. Estrutura do projeto
+## 20. Resultados esperados
 
-- `server.js`
-  - servidor principal da aplicação;
+- no fluxo vulneravel, a adulteracao do parametro `role` foi aceita pelo servidor
+- no fluxo vulneravel, os dados trafegaram em HTTP e puderam ser visualizados com mais facilidade
+- no fluxo protegido, a adulteracao do `role` nao foi aceita
+- no fluxo protegido, houve bloqueio apos tres tentativas com senha incorreta
+- no HTTPS, o conteudo do trafego nao ficou exposto no Wireshark da mesma forma que no HTTP
 
-- `public/`
-  - páginas e scripts do frontend;
+## 21. Discussao de resultados
 
-- `scripts/gerar-certificado-demo.ps1`
-  - script para gerar o certificado local da demo;
+### 21.1. Seguranca em camadas
 
-- `.gitignore`
-  - arquivos e pastas que não devem ser enviados ao repositório.
+O projeto mostra que a seguranca de redes sem fio nao pode ser reduzida ao protocolo Wi-Fi. Mesmo em um ambiente com protecao no acesso sem fio, uma aplicacao mal implementada pode permitir exploracao.
 
-## 15. Problemas comuns
+### 21.2. Limite das ferramentas
 
-### A página não carrega quando o Burp está ligado
+Burp Suite e Wireshark nao sao “o problema”; eles sao instrumentos de analise. O problema real esta na implementacao insegura e na falta de boas praticas.
+
+### 21.3. Importancia do backend
+
+Confiar em parametros enviados pelo cliente representa erro conceitual grave. Privilegios devem ser definidos pelo servidor com base na identidade validada.
+
+### 21.4. Importancia do transporte
+
+Mesmo um fluxo de login com validacao correta ainda se beneficia de HTTPS, pois a protecao do transporte reduz a exposicao do conteudo trafegado.
+
+## 22. Limitacoes do projeto
+
+- trata-se de um ambiente controlado de laboratorio
+- o sistema e uma simulacao didatica, nao uma aplicacao corporativa completa
+- o certificado HTTPS utilizado na demo e self-signed
+- nao foram explorados ataques mais avancados de camada fisica ou de enlace
+- o foco foi autenticacao, autorizacao e transporte
+
+## 23. Trabalhos futuros
+
+- incluir demonstracoes relacionadas a WPA2 e WPA3
+- simular um captive portal malicioso
+- integrar logs persistentes em banco de dados
+- adicionar autenticacao multifator
+- comparar diferentes algoritmos e politicas de senha
+- ampliar o estudo para cenarios com access point falso
+
+## 30. Problemas comuns e como resolver
+
+### A pagina nao carrega quando o Burp esta ligado
 
 Causa:
 
-- o `Intercept` está segurando os requests GET da página.
+- o `Intercept` esta segurando os requests GET da pagina
 
-Solução:
+Solucao:
 
-1. deixe `Intercept is off` para carregar a página;
-2. ligue o `Intercept` só na hora de enviar o formulário.
+1. deixe `Intercept is off` para carregar a pagina
+2. ligue o `Intercept` so na hora de enviar o formulario
 
-### O Burp não intercepta nada
-
-Verifique:
-
-- se o navegador está usando proxy `127.0.0.1:8080`;
-- se o `Intercept is on` está ligado.
-
-### O navegador mostra “Não seguro” em `https://localhost:3443`
-
-Isso acontece porque o certificado usado no projeto é `self-signed`.
-
-Ou seja:
-
-- a conexão está criptografada;
-- mas o navegador não confia automaticamente no certificado, porque ele foi gerado localmente e não foi emitido por uma autoridade certificadora pública.
-
-Para testes locais, isso é esperado.
-
-### `https://IP_DO_PC:3443` não abre, mas `https://localhost:3443` abre
-
-Isso normalmente acontece porque o certificado foi gerado sem incluir o IPv4 do computador.
-
-Para corrigir:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\gerar-certificado-demo.ps1 -IpAddresses @("127.0.0.1","SEU_IPv4")
-```
-
-Depois, reinicie o servidor e teste novamente com:
-
-```txt
-https://IP_DO_PC:3443/login-seguro.html
-```
-
-### O celular não acessa o site
+### O Burp nao intercepta nada
 
 Verifique:
 
-- se o celular e o computador estão na mesma rede;
-- se o IP usado é o IPv4 correto do computador;
-- se firewall ou antivírus não estão bloqueando a porta.
+- se o navegador esta usando proxy `127.0.0.1:8080`
+- se o `Intercept is on` esta ligado
+
+### O HTTPS mostra aviso no navegador
+
+Isso e esperado porque o certificado da demo e self-signed.
+
+### O celular nao acessa o site
+
+Verifique:
+
+- se o celular e o computador estao na mesma rede
+- se o IP usado e o IPv4 correto do computador
+- se firewall ou antivirus nao estao bloqueando a porta
+
+## 31. Lista de evidencias para capturar e colocar no artigo
+
+Sugestao de prints ou figuras:
+
+1. pagina inicial do projeto
+2. tela do fluxo vulneravel
+3. Burp interceptando `POST /login-vulneravel`
+4. corpo da requisicao antes e depois da mudanca de `role`
+5. resposta aceitando `admin`
+6. painel registrando `vulnerable_success`
+7. tela do fluxo protegido
+8. Burp interceptando `POST /login-seguro`
+9. resposta protegida com `assignedRole: user`
+10. painel registrando `secure_role_override_blocked`
+11. painel mostrando `secure_blocked`
+12. Wireshark com fluxo HTTP
+13. Wireshark com fluxo HTTPS
+
+## 32. Arquivos uteis do projeto
+
+- gerador do certificado: `scripts/gerar-certificado-demo.ps1`
+- servidor principal: `server.js`
+- painel de evidencias: `public/painel-analise.html`
