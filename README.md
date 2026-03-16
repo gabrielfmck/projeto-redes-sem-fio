@@ -50,6 +50,7 @@ Este repositório contém a implementação prática que acompanha outras duas e
 15. [Fluxo de bloqueio por tentativas](#15-fluxo-de-bloqueio-por-tentativas)
 16. [Fluxo completo com Wireshark](#16-fluxo-completo-com-wireshark)
 17. [Comparação HTTP vs HTTPS no Wireshark](#17-comparação-http-vs-https-no-wireshark)
+    - [17.3. Por que o Burp consegue ler o HTTPS e o Wireshark não](#173-por-que-o-burp-consegue-ler-o-https-e-o-wireshark-não)
 18. [Teste no celular](#18-teste-no-celular)
 19. [Como usar o painel](#19-como-usar-o-painel)
 20. [Resultados esperados](#20-resultados-esperados)
@@ -157,19 +158,23 @@ O projeto conversa com três camadas principais:
 
 ### 5.4. Wireshark
 
-O Wireshark é uma ferramenta de captura e análise de pacotes. No projeto, ele é usado para mostrar:
+O Wireshark é uma ferramenta de captura e análise de pacotes de rede. Ele opera na **camada de rede**, capturando o tráfego TCP/IP bruto que trafega pela interface de rede. No projeto, ele é usado para mostrar:
 
 - A existência do tráfego na rede
 - A diferença entre tráfego legível em HTTP
 - A dificuldade de leitura quando o transporte está protegido por HTTPS
 
+No HTTP, o Wireshark consegue interpretar o protocolo e exibe os pacotes em **verde**, com o conteúdo legível. No HTTPS, ele continua vendo os pacotes TCP, mas o conteúdo aparece apenas como `TLSv1.3 / Application Data` — cifrado e ilegível. Essa diferença visual é em si uma evidência do funcionamento da criptografia de transporte.
+
 ### 5.5. Burp Suite
 
-O Burp Suite é uma ferramenta de interceptação e manipulação de requisições HTTP e HTTPS. No projeto, ele é usado para mostrar:
+O Burp Suite é uma ferramenta de interceptação e manipulação de requisições HTTP e HTTPS. Ele opera como um **proxy na camada de aplicação**, posicionado entre o browser e o servidor na mesma máquina. No projeto, ele é usado para mostrar:
 
 - Interceptação de requisições antes do envio ao servidor
 - Adulteração de parâmetros
 - Comparação entre um backend inseguro e outro protegido
+
+Uma diferença importante entre as duas ferramentas: o Burp consegue ler o conteúdo de requisições HTTPS porque age como intermediário **antes** do TLS ser aplicado — ele intercepta a requisição no browser, antes da criptografia. O Wireshark captura o tráfego **depois** do TLS ter sido aplicado, então no HTTPS só enxerga dados cifrados. Isso significa que um atacante externo na rede está na posição do Wireshark, não do Burp — ele vê que houve comunicação, mas não consegue ler o conteúdo.
 
 ### 5.6. Autenticação e autorização
 
@@ -542,7 +547,24 @@ http://127.0.0.1:3000/login-seguro.html
 
 ### 14.3. O que deve acontecer
 
-O servidor não vai conceder admin. A resposta vai trazer o privilégio real do usuário. No painel, deve aparecer:
+O servidor não vai conceder admin. A resposta vai trazer o privilégio real do usuário.
+
+**Se acessando via HTTP** (`http://127.0.0.1:3000`), o painel mostrará:
+
+```json
+{
+  "ok": true,
+  "mode": "seguro",
+  "username": "aluno",
+  "assignedRole": "user",
+  "claimedRole": "admin",
+  "transport": "http",
+  "httpsEnabled": true,
+  "message": "Login seguro validado na aplicacao. Para proteger o trafego no Wireshark, abra esta mesma pagina via HTTPS."
+}
+```
+
+**Se acessando via HTTPS** (`https://192.168.X.XXX:3443`), o painel mostrará:
 
 ```json
 {
@@ -556,6 +578,8 @@ O servidor não vai conceder admin. A resposta vai trazer o privilégio real do 
   "message": "Login seguro validado. Senha verificada com scrypt, role forjado bloqueado e trafego protegido por TLS."
 }
 ```
+
+> **Observação:** o campo `transport` reflete o protocolo real utilizado na requisição. Ambas as respostas demonstram o bloqueio correto do `role` adulterado — a diferença está no transporte, que é o que o Wireshark vai evidenciar na seção 17.
 
 ---
 
@@ -609,28 +633,61 @@ Falhas consecutivas no fluxo protegido ativam bloqueio temporario e aparecem no 
 
 ## 16. Fluxo completo com Wireshark
 
-### 16.1. Preparação
+### 16.1. Por que o tráfego pode não aparecer — leia antes de começar
 
-1. Abra o Wireshark
-2. Escolha a interface de rede que está sendo usada (geralmente a interface Ethernet)
-3. Comece a captura
+> ⚠️ **Problema comum:** se o browser e o servidor estão no **mesmo computador**, o tráfego passa pelo adaptador de loopback interno do Windows — não pela interface Ethernet física. O Wireshark capturando na Ethernet não enxerga esse tráfego, mesmo que você use o IP real da máquina (`192.168.X.X`) em vez de `127.0.0.1`.
+
+**Escolha uma das duas abordagens abaixo:**
+
+---
+
+#### Opção A — Usar o celular como cliente (recomendado)
+
+Esta é a abordagem mais simples, mais realista e não exige instalar nada extra. O celular gera tráfego que percorre a rede física e aparece imediatamente na captura Ethernet do PC.
+
+1. Descubra o IPv4 do computador em **Configurações > Rede e Internet > Ethernet**
+2. Conecte o celular e o computador na **mesma rede Wi-Fi**
+3. No celular, abra:
+
+```
+http://IPV4_DO_PC:3000/login-inseguro.html
+```
+
+4. No Wireshark do PC, selecione a interface **Ethernet** e inicie a captura
+5. Use o filtro:
+
+```
+tcp.port == 3000 or tcp.port == 3443
+```
+
+6. Faça o login pelo celular — os pacotes aparecem imediatamente
+
+---
+
+#### Opção B — Capturar tráfego do próprio PC com Npcap
+
+Se preferir usar o browser do próprio PC, é necessário instalar o **Npcap**, que cria um adaptador de loopback capturável.
+
+1. Baixe e instale o [Npcap](https://npcap.com) marcando a opção **"Install Npcap in WinPcap API-compatible Mode"**
+2. Reinicie o Wireshark após a instalação
+3. Selecione a interface **"Adapter for loopback traffic capture"** (e não a Ethernet)
 4. Use o filtro:
 
 ```
 tcp.port == 3000 or tcp.port == 3443
 ```
 
+5. Acesse a aplicação normalmente pelo browser local
+
 ---
 
 ### 16.2. Teste HTTP
 
-1. No navegador ou no celular, abra:
+1. No celular (Opção A) ou no browser local com Npcap (Opção B), abra:
 
 ```
 http://IPV4_DO_PC:3000/login-inseguro.html
 ```
-
-> Para encontrar seu IPv4, vá em **Configurações > Rede e Internet > Ethernet** e copie o endereço IPv4 `192.168.X.X`.
 
 2. Faça um login vulnerável com:
    - `usuario = aluno`
@@ -639,20 +696,26 @@ http://IPV4_DO_PC:3000/login-inseguro.html
 
 3. No Wireshark:
    - Localize os pacotes da porta `3000`
-   - Clique com o botão direito
-   - Use `Follow` ou `Seguir`
-   - Escolha `Fluxo TCP`
+   - Clique com o botão direito em um deles
+   - Use `Follow` → `Fluxo TCP`
 
 ---
 
 ### 16.3. O que deve aparecer
 
-No fluxo HTTP, o conteúdo do login pode aparecer legível, incluindo campos como `usuario`, `senha` e `role`.
+No fluxo HTTP, os pacotes aparecem com **destaque em verde** na lista do Wireshark. Isso acontece porque o Wireshark reconhece e classifica o protocolo HTTP — ele consegue ler o conteúdo e por isso colore as linhas. O conteúdo do login aparece legível, incluindo campos como `usuario`, `senha` e `role`.
+
+Para ver o corpo da requisição:
+- Localize a linha com `POST /login-vulneravel`
+- Clique com o botão direito
+- Use `Follow` → `Fluxo TCP`
+- O JSON com as credenciais aparecerá em texto claro
 
 Esse resultado mostra que:
 
 - O tráfego existe em claro do ponto de vista do transporte
-- Um observador com acesso ao meio pode analisar o conteúdo
+- O Wireshark colore de verde os pacotes HTTP porque consegue interpretar o protocolo
+- Um observador com acesso ao meio pode analisar o conteúdo integralmente
 - O problema se agrava em redes sem fio abertas, mal configuradas ou monitoradas
 
 > 💡 No HTTP, o tráfego passa sem proteção de transporte. O Wireshark consegue capturar e reconstruir o conteúdo da requisição, o que mostra o risco em redes sem fio sem proteção adequada.
@@ -663,13 +726,15 @@ Esse resultado mostra que:
 
 ### 17.1. Teste HTTPS
 
-1. Abra no navegador:
+> ⚠️ **Mesma observação da seção 16:** o tráfego HTTPS do próprio PC não aparece na captura Ethernet. Use o celular (Opção A) ou o Npcap com o adaptador de loopback (Opção B).
+
+1. No celular ou browser local com Npcap, abra:
 
 ```
-https://IP_DO_PC:3443/login-seguro.html
+https://IPV4_DO_PC:3443/login-seguro.html
 ```
 
-2. Se aparecer aviso do certificado, aceite para fins de demonstração
+2. Se aparecer aviso de certificado, aceite para fins de demonstração
 3. Faça login com:
    - `usuario = aluno`
    - `senha = 123456`
@@ -678,17 +743,47 @@ https://IP_DO_PC:3443/login-seguro.html
 
 ### 17.2. O que observar
 
-- Os pacotes continuam existindo
-- O Wireshark ainda mostra que houve comunicação
-- Mas o conteúdo da senha e do corpo **não aparece em texto claro** como no HTTP
+Os pacotes HTTPS aparecem no Wireshark, mas **sem o destaque verde** dos pacotes HTTP. Isso é intencional e é exatamente a evidência que a demonstração precisa mostrar:
+
+| | HTTP (porta 3000) | HTTPS (porta 3443) |
+|---|---|---|
+| Pacotes aparecem? | ✅ Sim | ✅ Sim |
+| Cor na lista | 🟢 Verde | ⬜ Cinza/padrão |
+| Protocolo identificado | HTTP | TLSv1.3 |
+| Conteúdo visível | `POST`, JSON com senha | `Application Data` cifrado |
+| Follow TCP Stream | Mostra credenciais em claro | Mostra dados binários ilegíveis |
+
+O Wireshark colore de **verde** os pacotes HTTP porque consegue interpretar o protocolo e exibir o conteúdo. No HTTPS, ele vê apenas pacotes TCP carregando dados TLS cifrados — não tem como classificar como HTTP nem exibir o conteúdo, então as linhas ficam na cor padrão.
+
+A ausência do verde **não significa que o tráfego sumiu** — significa que o TLS está protegendo o conteúdo e o Wireshark não consegue mais lê-lo.
 
 Esse resultado sustenta a ideia de que:
 
 - A criptografia de transporte **não elimina** o tráfego
-- Ela **protege o conteúdo** do tráfego
+- Ela **protege o conteúdo** do tráfego — e a mudança visual na cor dos pacotes evidencia isso
 - A defesa no transporte complementa, mas não substitui, a defesa na aplicação
 
-> 💡 Aqui ainda existe tráfego na rede, mas o conteúdo está protegido por TLS. Isso mostra a diferença entre enxergar que houve comunicação e conseguir ler o conteúdo da comunicação.
+> 💡 No HTTP os pacotes ficam verdes porque o Wireshark reconhece e lê o protocolo. No HTTPS os pacotes aparecem em cinza como `TLSv1.3 / Application Data` — o tráfego existe, mas o conteúdo está cifrado. Essa diferença visual é a prova de que o TLS está funcionando.
+
+---
+
+### 17.3. Por que o Burp consegue ler o HTTPS e o Wireshark não
+
+Essa é uma diferença conceitual importante para o projeto.
+
+| | Burp Suite | Wireshark |
+|---|---|---|
+| **Onde atua** | Camada de aplicação (proxy local) | Camada de rede (pacotes TCP/IP brutos) |
+| **Posição na comunicação** | Entre o browser e o servidor, **antes** do TLS | Na interface de rede, **depois** do TLS |
+| **HTTP — conteúdo legível?** | ✅ Sim | ✅ Sim |
+| **HTTPS — conteúdo legível?** | ✅ Sim (intercepta antes da criptografia) | ❌ Não (vê apenas `Application Data` cifrado) |
+| **Para que serve no projeto** | Interceptar e adulterar requisições | Mostrar o que um atacante externo na rede enxerga |
+
+O Burp consegue ler o HTTPS porque está instalado **na mesma máquina** que o browser e age como intermediário antes da criptografia ser aplicada. Quando o browser quer enviar uma requisição HTTPS, ele na verdade a entrega ao Burp em texto claro — é o Burp quem faz o TLS com o servidor. O browser confia no Burp porque o usuário instalou o certificado CA dele.
+
+O Wireshark não tem esse acesso. Ele captura o tráfego que já saiu criptografado pela interface de rede. Um atacante externo monitorando a rede está exatamente nessa posição — vê os pacotes TCP, identifica que houve comunicação, mas não consegue ler o conteúdo porque o TLS já foi aplicado antes dos dados saírem da máquina.
+
+> 💡 O Burp simula a perspectiva de alguém com acesso à máquina do usuário. O Wireshark simula a perspectiva de um atacante monitorando a rede. São ameaças diferentes e é por isso que ambas as ferramentas têm papel na demonstração.
 
 ---
 
@@ -704,6 +799,8 @@ Esse resultado sustenta a ideia de que:
 http://IPV4_DO_PC:3000
 ```
 
+> 💡 **O uso do celular como cliente é a forma mais simples de gerar tráfego visível no Wireshark.** Quando browser e servidor estão no mesmo PC, o tráfego passa pelo loopback interno e não aparece na captura Ethernet. Com o celular na mesma rede Wi-Fi, o tráfego percorre a rede real e fica visível normalmente.
+
 ---
 
 ### 18.2. Com Burp no celular
@@ -717,8 +814,6 @@ Se quiser interceptar o celular pelo Burp:
 5. Intercepte normalmente no Burp
 
 > **Observação:** para HTTP, isso costuma funcionar direto. Para HTTPS, normalmente é necessário instalar o certificado CA do Burp no dispositivo.
-
-> 💡 O uso do celular aproxima a demonstração de um ambiente real de rede sem fio.
 
 ---
 
@@ -751,9 +846,13 @@ O `painel-analise.html` é uma fonte de evidência observacional do experimento,
 
 O projeto mostra que a segurança de redes sem fio não pode ser reduzida ao protocolo Wi-Fi. Mesmo em um ambiente com proteção no acesso sem fio, uma aplicação mal implementada pode permitir exploração.
 
-### 21.2. Limite das ferramentas
+### 21.2. Limite das ferramentas e perspectiva do atacante
 
-Burp Suite e Wireshark não são "o problema"; eles são instrumentos de análise. O problema real está na implementação insegura e na falta de boas práticas.
+Burp Suite e Wireshark não são "o problema"; eles são instrumentos de análise que simulam perspectivas diferentes de ataque.
+
+O Burp representa a perspectiva de alguém com acesso à máquina do usuário — ele age como proxy local e consegue ler o conteúdo de requisições HTTPS porque intercepta antes da criptografia ser aplicada. O Wireshark representa a perspectiva de um atacante externo monitorando a rede — ele captura o tráfego já criptografado e não consegue ler o conteúdo protegido por TLS.
+
+Essa distinção reforça a importância da defesa em camadas: o HTTPS protege contra o atacante na rede (posição do Wireshark), mas não protege contra comprometimento do próprio dispositivo do usuário (posição do Burp). O problema real está na implementação insegura e na falta de boas práticas em cada camada.
 
 ### 21.3. Importância do backend
 
@@ -819,24 +918,36 @@ Isso é **esperado** porque o certificado da demo é self-signed.
 - Se o IP usado é o IPv4 correto do computador
 - Se firewall ou antivírus não estão bloqueando a porta
 
+---
+
+### ❓ O tráfego não aparece no Wireshark
+
+**Causa mais comum:** browser e servidor estão no mesmo PC. O tráfego passa pelo loopback interno e não aparece na captura Ethernet, mesmo usando o IP real da máquina.
+
+**Solução 1 (recomendada):** use o celular como cliente. Veja a seção 18.
+
+**Solução 2:** instale o [Npcap](https://npcap.com) e selecione a interface **"Adapter for loopback traffic capture"** no Wireshark. Veja a seção 16.1, Opção B.
+
+---
+
 ## Referências
- 
+
 KUROSE, James F.; ROSS, Keith W. **Redes de Computadores e a Internet: Uma Abordagem Top-Down**. 8. ed. São Paulo: Pearson, 2021.
 
 NATAL, Igor da Penha. **Material de aula da disciplina de Redes de Computadores**. Universidade Federal de Uberlândia, Campus Monte Carmelo, 2025.
- 
+
 ---
- 
+
 ## Agradecimentos
- 
+
 Agradecemos ao **Prof. Igor da Penha Natal** pela orientação, pelos materiais disponibilizados e pelo suporte durante o desenvolvimento deste projeto, no âmbito da disciplina de Redes de Computadores da Universidade Federal de Uberlândia.
- 
+
 ---
- 
+
 ## Licença
- 
+
 Este projeto foi desenvolvido para fins estritamente **educacionais e acadêmicos**. O código, os fluxos vulneráveis e as demonstrações presentes neste repositório têm como único objetivo ilustrar conceitos de segurança em redes sem fio em ambiente controlado.
- 
+
 Não utilize este projeto em ambientes de produção ou para fins maliciosos.
- 
+
 Distribuído sob a licença [MIT](https://opensource.org/licenses/MIT).
